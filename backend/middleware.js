@@ -8,7 +8,7 @@ const authenticationKey = (req, response, next) => {
     }
 }
 
-async function getAccessToken(code, state, client_id, client_secret) {
+async function getAccessToken(code, state, client_id, client_secret, redirect_uri) {
     const request = await fetch(GITHUB_TOKEN_URL, {
         method: "POST",
         headers: {
@@ -18,7 +18,8 @@ async function getAccessToken(code, state, client_id, client_secret) {
             client_id,
             client_secret,
             code,
-            state
+            state,
+            redirect_uri
         })
     });
     const text = await request.text();

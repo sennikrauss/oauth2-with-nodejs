@@ -37,6 +37,7 @@ app.get("/auth/github",function (req, res){
     const query = {
         scope: ["user", "profile"],
         client_id: process.env.GITHUB_CLIENT_ID,
+        redirect_uri: `http://localhost:${process.env.PORT}/github/callback`,
         state: stateParam,
     };
 
@@ -58,18 +59,26 @@ app.get("/github/callback", async (req, res) => {
             code,
             state,
             process.env.GITHUB_CLIENT_ID,
-            process.env.GITHUB_CLIENT_SECRET
+            process.env.GITHUB_CLIENT_SECRET,
+            `http://localhost:${process.env.PORT}/github/callback`
         );
-        req.session.token = access_token;
-        const user = await fetchGitHubUser(access_token);
 
-        if (user) {
-            req.session.access_token = access_token;
-            req.session.github = user;
-            req.session.loggedIn = true;
-            res.redirect("/account");
-        } else {
-            res.redirect("/auth/failure");
+        if (access_token){
+            req.session.token = access_token;
+            const user = await fetchGitHubUser(access_token);
+
+            if (user) {
+                req.session.access_token = access_token;
+                req.session.github = user;
+                req.session.loggedIn = true;
+                res.redirect("/account");
+            } else {
+                res.redirect("/auth/failure");
+            }
+        }else {
+            let text = req.url;
+            let params = new URLSearchParams(text).get("error_description")
+            res.status(401).send(params)
         }
     }
 )
